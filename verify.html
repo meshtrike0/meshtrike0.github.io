@@ -41,6 +41,11 @@
     <p class="why__close">The same values are in the whitepaper, in every GitHub release and in the project README. A fake would have to change all of them at once.</p>
   </section>
 
+  <h2>One command (on a computer)</h2>
+  <p>In the folder with the APK, run <code>verify.sh</code> from the release (or from the source repository):</p>
+  <pre><code>sh verify.sh meshtrike-*.apk meshgrid-*.apk</code></pre>
+  <p>It prints <b>REAL</b> or <b>NOT REAL</b> for each file. It checks who signed the APK (with Android’s <code>apksigner</code>) and, if <code>SHA256SUMS</code> and its signature are next to the APK, that the file is one the release key signed (with <code>minisign</code>). Any failed check means <b>do not install it</b>. The individual checks are below if you want to run them by hand.</p>
+
   <h2>On a phone (no computer needed)</h2>
   <ol class="gap">
     <li>Install <b>AppVerifier</b>, a small open-source app that reads an app’s signing fingerprint the way Android sees it.</li>
