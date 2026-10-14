@@ -183,133 +183,51 @@
     });
   })();
 
-  /* ---------- Swag: filters, sizes, bag ---------- */
-  var products = {};
-  $$('.product').forEach(function (p) {
-    products[p.getAttribute('data-id')] = {
-      el: p,
-      name: p.getAttribute('data-name'),
-      price: +p.getAttribute('data-price'),
-      bg: p.getAttribute('data-bg'),
-      cat: p.getAttribute('data-cat')
-    };
-  });
-
+  /* ---------- Swag: preview filters (merch is not on sale yet, so there is no bag or checkout) ---------- */
+  var products = $$('.product');
   $$('.cat').forEach(function (b) {
     b.addEventListener('click', function () {
       var cat = b.getAttribute('data-cat');
       $$('.cat').forEach(function (o) { o.setAttribute('aria-pressed', o === b); });
-      Object.keys(products).forEach(function (id) {
-        var p = products[id], show = cat === 'All' || p.cat === cat;
-        p.el.hidden = !show;
-        if (show) p.el.classList.add('rv-in');
+      products.forEach(function (p) {
+        var show = cat === 'All' || p.getAttribute('data-cat') === cat;
+        p.hidden = !show;
+        if (show) p.classList.add('rv-in');
       });
-      announce(cat === 'All' ? 'Showing all swag' : 'Showing ' + cat);
+      announce(cat === 'All' ? 'Showing all swag previews' : 'Showing ' + cat + ' previews');
     });
   });
 
-  $$('.sizes').forEach(function (g) {
-    $$('.size', g).forEach(function (b) {
-      b.addEventListener('click', function () {
-        $$('.size', g).forEach(function (o) { o.setAttribute('aria-pressed', o === b); });
-      });
+  /* ---------- Header bag button: small "merch is coming soon" dialog ---------- */
+  var soonBtn = $('[data-open-soon]'), soon = $('#shop-soon'), lastFocus = null;
+  if (soonBtn && soon) {
+    var panel = $('.drawer__panel', soon);
+    var focusables = function () {
+      return $$('button, [href], [tabindex]:not([tabindex="-1"])', panel).filter(function (el) { return !el.disabled && el.offsetParent !== null; });
+    };
+    var openSoon = function () {
+      lastFocus = document.activeElement;
+      soon.classList.add('open');
+      setTimeout(function () { $('.icon-btn', panel).focus(); }, 50);
+    };
+    var closeSoon = function (restore) {
+      if (!soon.classList.contains('open')) return;
+      soon.classList.remove('open');
+      if (restore !== false && lastFocus) lastFocus.focus();
+    };
+    soonBtn.addEventListener('click', openSoon);
+    $$('[data-close-soon]', soon).forEach(function (b) { b.addEventListener('click', closeSoon); });
+    // the link scrolls to the swag section; don't pull focus back up to the header
+    $('[data-soon-go]', soon).addEventListener('click', function () { closeSoon(false); });
+    document.addEventListener('keydown', function (e) {
+      if (!soon.classList.contains('open')) return;
+      if (e.key === 'Escape') { closeSoon(); return; }
+      if (e.key === 'Tab') {
+        var f = focusables(); if (!f.length) return;
+        var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
     });
-  });
-
-  var cart = {}; // key "id|size" -> qty
-  var cartBtn = $('[data-open-cart]'), cartN = $('.cart-btn__n');
-  var drawer = $('#cart'), panel = $('.drawer__panel'), body = $('[data-cart-body]'), empty = $('[data-cart-empty]');
-  var subtotalEl = $('[data-subtotal]'), lastFocus = null;
-
-  function renderCart() {
-    $$('.line', body).forEach(function (n) { n.remove(); });
-    var count = 0, total = 0;
-    Object.keys(cart).forEach(function (key) {
-      var qty = cart[key];
-      if (qty <= 0) return;
-      var parts = key.split('|'), p = products[parts[0]], size = parts[1];
-      count += qty; total += p.price * qty;
-      var dark = p.bg.toUpperCase() === '#15171C';
-      var row = document.createElement('div');
-      row.className = 'line';
-      row.innerHTML =
-        '<span class="line__img" style="--bg:' + p.bg + ';--fg:' + (dark ? '#CDF25C' : '#15171C') + '"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-bag"/></svg></span>' +
-        '<div class="line__txt"><span class="line__name"></span><span class="line__meta"></span></div>' +
-        '<div class="qty"><button type="button" data-d="-1">−</button><span></span><button type="button" data-d="1">+</button></div>';
-      $('.line__name', row).textContent = p.name;
-      $('.line__meta', row).textContent = (size ? 'Size ' + size + ' · ' : '') + '$' + p.price;
-      $('.qty span', row).textContent = qty;
-      $('[data-d="-1"]', row).setAttribute('aria-label', 'Remove one ' + p.name);
-      $('[data-d="1"]', row).setAttribute('aria-label', 'Add one ' + p.name);
-      $$('.qty button', row).forEach(function (b) {
-        b.addEventListener('click', function () {
-          cart[key] = Math.max(0, (cart[key] || 0) + +b.getAttribute('data-d'));
-          if (!cart[key]) delete cart[key];
-          renderCart();
-          var again = $('.line [data-d]', body);
-          (again || $('[data-close-cart].icon-btn')).focus();
-        });
-      });
-      body.appendChild(row);
-    });
-    empty.hidden = count > 0;
-    subtotalEl.textContent = '$' + total;
-    var prev = cartN.textContent;
-    cartN.textContent = count;
-    cartN.hidden = count === 0;
-    if (String(count) !== prev && count) { cartN.classList.remove('bump'); void cartN.offsetWidth; cartN.classList.add('bump'); }
-    cartBtn.setAttribute('aria-label', 'Open bag, ' + count + (count === 1 ? ' item' : ' items'));
-    return count;
   }
-
-  $$('[data-add]').forEach(function (btn) {
-    var timer;
-    btn.addEventListener('click', function () {
-      var li = btn.closest('.product'), id = li.getAttribute('data-id');
-      var sel = $('.size[aria-pressed="true"]', li), size = sel ? sel.getAttribute('data-size') : '';
-      var key = id + (size ? '|' + size : '');
-      cart[key] = (cart[key] || 0) + 1;
-      renderCart();
-      btn.classList.add('added');
-      btn.querySelector('span').textContent = 'Added to bag';
-      announce(products[id].name + (size ? ', size ' + size : '') + ' added to bag');
-      clearTimeout(timer);
-      timer = setTimeout(function () {
-        btn.classList.remove('added');
-        btn.querySelector('span').textContent = 'Add to bag';
-      }, 1400);
-    });
-  });
-
-  function focusables() {
-    return $$('button, [href], input, [tabindex]:not([tabindex="-1"])', panel).filter(function (el) { return !el.disabled && el.offsetParent !== null; });
-  }
-  function openCart() {
-    lastFocus = document.activeElement;
-    drawer.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    setTimeout(function () { $('.icon-btn', panel).focus(); }, 50);
-  }
-  function closeCart() {
-    if (!drawer.classList.contains('open')) return;
-    drawer.classList.remove('open');
-    document.body.style.overflow = '';
-    if (lastFocus) lastFocus.focus();
-  }
-  cartBtn.addEventListener('click', openCart);
-  $$('[data-close-cart]').forEach(function (b) { b.addEventListener('click', closeCart); });
-  document.addEventListener('keydown', function (e) {
-    if (!drawer.classList.contains('open')) return;
-    if (e.key === 'Escape') { closeCart(); return; }
-    if (e.key === 'Tab') {
-      var f = focusables(); if (!f.length) return;
-      var first = f[0], last = f[f.length - 1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-    }
-  });
-  $('[data-checkout]').addEventListener('click', function () {
-    toast(renderCart() ? 'Checkout opens with the store launch' : 'Your bag is empty');
-  });
-  renderCart();
 })();

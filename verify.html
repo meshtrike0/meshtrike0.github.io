@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Verify your download · Meshtrike</title>
-<meta name="description" content="How to check that a Meshtrike or MeshGRID APK is the real one: signing fingerprint, signed checksums (OpenPGP and minisign), on a phone or a computer.">
+<meta name="description" content="Check that a Meshtrike or MeshGRID APK is the real one, right in your browser. The file never leaves your device.">
 <meta name="theme-color" content="#F6F5F1">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
@@ -13,6 +13,7 @@
 <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/whitepaper.css">
+<script src="js/verify.js" defer></script>
 </head>
 <body>
 <nav class="bar" aria-label="Verify">
@@ -26,8 +27,29 @@
     <span class="brand__txt"><span class="brand__name">Verify your download</span><span class="brand__eyebrow">MESHTRIKE · MESHGRID · RELEASE KEYS</span></span>
   </header>
 
-  <h1>Only install the real app</h1>
-  <p class="lede">Meshtrike spreads phone to phone, often without internet. That is exactly when a fake copy could be passed along. Every real Meshtrike and MeshGRID APK is signed with one private key that never leaves the team. Check it before you install, and before you pass it on.</p>
+  <h1>Is my APK the real one?</h1>
+  <p class="lede">Meshtrike spreads phone to phone, often without internet. That is exactly when a fake copy could be passed along. Pick the APK below and this page tells you in a few seconds whether it is genuine. It works on a phone or a computer.</p>
+
+  <section class="checker keep" data-checker aria-labelledby="chk">
+    <h2 id="chk" class="checker__h">Check an APK</h2>
+    <label class="checker__drop" data-drop>
+      <input type="file" accept=".apk,application/vnd.android.package-archive">
+      <span class="checker__icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span>
+      <span class="checker__cta">Choose the APK file</span>
+      <span class="checker__hint">or drop it here · Meshtrike or MeshGRID</span>
+    </label>
+    <progress class="checker__bar" data-progress max="1" value="0" hidden></progress>
+    <div class="checker__result" data-result role="status" aria-live="polite" hidden></div>
+    <p class="checker__privacy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Your file is checked on this device and never uploaded. This page cannot even make network requests.</p>
+  </section>
+
+  <h2>How can a page know it’s real?</h2>
+  <p>Every genuine Meshtrike and MeshGRID APK is <b>signed</b> with one private <b>release key</b>, a secret that only the Meshtrike team holds and that never goes online. Signing works like a wax seal that nobody else can copy:</p>
+  <ol class="gap">
+    <li><b>The signature.</b> Inside every APK is a signature made with the release key over the exact contents of the file. Change a single byte and the signature no longer fits. This page re-checks that signature with the same maths Android uses.</li>
+    <li><b>The fingerprint.</b> The APK also carries the key’s public certificate. Its SHA-256 fingerprint is a unique 64-character ID, shown below. Anyone can make a valid signature with <i>their own</i> key, but only the Meshtrike key produces <i>this</i> fingerprint.</li>
+    <li><b>Both must match.</b> Valid signature + official fingerprint = real. A modified file breaks the signature; a re-signed fake shows a different fingerprint.</li>
+  </ol>
 
   <section class="why keep" aria-labelledby="fp">
     <div class="eyebrow eyebrow--lime" id="fp">OFFICIAL FINGERPRINTS</div>
@@ -38,38 +60,37 @@
     <p class="fp" data-fp="openpgp">Published with the first signed release.</p>
     <p><b style="color:#fff">minisign public key:</b></p>
     <p class="fp" data-fp="minisign">Published with the first signed release.</p>
-    <p class="why__close">The same values are in the whitepaper, in every GitHub release and in the project README. A fake would have to change all of them at once.</p>
+    <p class="why__close">The same values are in the whitepaper, in every GitHub release, in the project README and inside the app. A fake would have to change all of them at once.</p>
   </section>
 
-  <h2>One command (on a computer)</h2>
+  <h2>Other ways to check</h2>
+  <h3>Inside Meshtrike</h3>
+  <p>Settings → About &amp; limits → <b>Verify this app</b> shows the fingerprint of the copy you are running and of MeshGRID. It is a quick check, but a fake copy could show a fake number there, so check the APK file itself on this page before installing.</p>
+
+  <h3>On a computer: one command</h3>
   <p>In the folder with the APK, run <code>verify.sh</code> from the release (or from the source repository):</p>
   <pre><code>sh verify.sh meshtrike-*.apk meshgrid-*.apk</code></pre>
-  <p>It prints <b>REAL</b> or <b>NOT REAL</b> for each file. It checks who signed the APK (with Android’s <code>apksigner</code>) and, if <code>SHA256SUMS</code> and its signature are next to the APK, that the file is one the release key signed (with <code>minisign</code>). Any failed check means <b>do not install it</b>. The individual checks are below if you want to run them by hand.</p>
+  <p>It prints <b>REAL</b> or <b>NOT REAL</b> for each file.</p>
 
-  <h2>On a phone (no computer needed)</h2>
-  <ol class="gap">
-    <li>Install <b>AppVerifier</b>, a small open-source app that reads an app’s signing fingerprint the way Android sees it.</li>
-    <li>Open the Meshtrike APK (or the installed app) with AppVerifier.</li>
-    <li>Paste or compare the <b>APK signing certificate</b> above. AppVerifier says <b>Verified</b> only if it matches.</li>
-    <li>If it does not match: <b>do not install it</b>, delete it, and do not pass it on.</li>
-  </ol>
-  <p>Inside Meshtrike, Settings → About & limits → <b>Verify this app</b> shows the fingerprint of the copy you are running and of MeshGRID. That is a quick check, but a fake copy could show a fake number there, so AppVerifier or a computer is the real test.</p>
-
-  <h2>On a computer</h2>
-  <p>Download the APKs together with <code>SHA256SUMS</code>, <code>SHA256SUMS.asc</code> and <code>SHA256SUMS.minisig</code> from the release, into one folder.</p>
-  <h3>1. The files are the ones that were signed</h3>
-  <pre><code>shasum -a 256 -c SHA256SUMS</code></pre>
-  <p>Every line must end in <b>OK</b>.</p>
-  <h3>2. The checksums were signed by Meshtrike (OpenPGP, like Tor)</h3>
-  <pre><code>gpg --import meshtrike-release-openpgp.asc
+  <details class="more">
+    <summary>Advanced: check every layer by hand (like Tor Browser)</summary>
+    <p>Download the APKs together with <code>SHA256SUMS</code>, <code>SHA256SUMS.asc</code> and <code>SHA256SUMS.minisig</code> from the release, into one folder.</p>
+    <h3>1. The files are the ones that were signed</h3>
+    <pre><code>shasum -a 256 -c SHA256SUMS</code></pre>
+    <p>Every line must end in <b>OK</b>.</p>
+    <h3>2. The checksums were signed by Meshtrike (OpenPGP)</h3>
+    <pre><code>gpg --import meshtrike-release-openpgp.asc
 gpg --verify SHA256SUMS.asc SHA256SUMS</code></pre>
-  <p>Look for <b>Good signature from "Meshtrike Releases"</b>, and check the key fingerprint gpg prints against the one above. A warning that the key is “not certified” is normal.</p>
-  <h3>3. A second, independent signature (minisign)</h3>
-  <pre><code>minisign -Vm SHA256SUMS -P &lt;minisign public key above&gt;</code></pre>
-  <p>It must say <b>Signature and comment signature verified</b>.</p>
-  <h3>4. The APK is signed with the real key (Android build tools)</h3>
-  <pre><code>apksigner verify --print-certs meshtrike-*.apk</code></pre>
-  <p>The <b>certificate SHA-256 digest</b> must equal the APK signing certificate above, with or without colons.</p>
+    <p>Look for <b>Good signature from "Meshtrike Releases"</b>, and check the key fingerprint gpg prints against the one above. A warning that the key is “not certified” is normal.</p>
+    <h3>3. A second, independent signature (minisign)</h3>
+    <pre><code>minisign -Vm SHA256SUMS -P &lt;minisign public key above&gt;</code></pre>
+    <p>It must say <b>Signature and comment signature verified</b>.</p>
+    <h3>4. The APK is signed with the real key (Android build tools)</h3>
+    <pre><code>apksigner verify --print-certs meshtrike-*.apk</code></pre>
+    <p>The <b>certificate SHA-256 digest</b> must equal the APK signing certificate above, with or without colons.</p>
+    <h3>Optional: AppVerifier on a phone</h3>
+    <p>The open-source AppVerifier app can also compare an installed app’s fingerprint with the one above.</p>
+  </details>
 
   <div class="box box--warn keep">
     <div class="box__t">If anything does not match</div>

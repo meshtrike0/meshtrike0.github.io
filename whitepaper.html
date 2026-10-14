@@ -118,7 +118,7 @@
   <p>Meshtrike is meant to spread from phone to phone, often when there is no internet to check anything. That makes fake copies a real risk, so every release can be verified the way Tor Browser’s can, with several independent checks:</p>
   <ul>
     <li><b>One signing key.</b> Meshtrike and MeshGRID are signed with a single private release key that never leaves the team and is never stored online. Android refuses any update not signed with it, and Meshtrike refuses a MeshGRID signed with anything else.</li>
-    <li><b>A published fingerprint.</b> The key’s SHA-256 fingerprint is printed below, on the website, in every release and in the source repository. Any genuine copy, however it reached you, shows the same value. Free tools such as AppVerifier compare it on the phone itself, with no computer and no internet.</li>
+    <li><b>A published fingerprint.</b> The key’s SHA-256 fingerprint is printed below, on the website, in every release and in the source repository. Any genuine copy, however it reached you, shows the same value. The verify page checks an APK right in the browser, on a phone or a computer, without uploading it: it re-checks the signature the way Android does and compares the fingerprint.</li>
     <li><b>Signed checksums.</b> Each release lists the SHA-256 hash of every APK in a file signed twice, with an OpenPGP key (the format Tor uses) and with an independent minisign key. Forging a release would mean stealing both.</li>
     <li><b>Open code.</b> The source is public under the Apache-2.0 license, so anyone can check what the app does. Reproducible builds, where anyone can rebuild an identical APK from that code, are planned next.</li>
   </ul>
@@ -126,7 +126,7 @@
     <div class="box__t">Official fingerprints</div>
     <p>APK signing certificate (SHA-256): <span class="mono" data-fp="android">published with the first signed release</span><br>OpenPGP release key: <span class="mono" data-fp="openpgp">published with the first signed release</span><br>minisign public key: <span class="mono" data-fp="minisign">published with the first signed release</span></p>
   </div>
-  <p class="gap">On a computer, one command checks everything: <span class="mono">sh verify.sh meshtrike-*.apk</span> prints REAL or NOT REAL. Step-by-step instructions are at meshtrike0.github.io/verify.html. If anything does not match, do not install the app, and do not pass it on.</p>
+  <p class="gap">To check a copy, open meshtrike0.github.io/verify.html and pick the APK; it answers REAL or NOT REAL. On a computer, <span class="mono">sh verify.sh meshtrike-*.apk</span> does the same in one command. If anything does not match, do not install the app, and do not pass it on.</p>
 
   <section class="use keep" aria-labelledby="use">
     <div class="eyebrow eyebrow--olive" id="use">7. RESPONSIBLE USE</div>
