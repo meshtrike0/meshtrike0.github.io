@@ -13,7 +13,7 @@
 
   // Official release certificate (SHA-256 of the DER certificate), as printed by
   // `apksigner verify --print-certs` and published in the README and whitepaper.
-  var OFFICIAL_CERT_SHA256 = 'NOT_YET_PUBLISHED';
+  var OFFICIAL_CERT_SHA256 = 'AB:09:7B:F4:3C:9B:63:0F:06:67:02:E0:61:9A:60:43:05:13:6A:D2:D6:4B:AA:38:E7:62:2F:AF:17:09:AD:3E';
 
   var V2_ID = 0x7109871a, V3_ID = 0xf05368c0, V31_ID = 0x1b93ad61;
   var CHUNK = 1048576;

@@ -12,35 +12,65 @@
   /* ---------- Toast + screen-reader announcements ---------- */
   var toastEl = $('.toast'), srEl = $('[data-sr]'), toastT;
   function toast(text) {
+    if (!toastEl) return;
     clearTimeout(toastT);
     toastEl.textContent = text;
     toastEl.classList.add('show');
     toastT = setTimeout(function () { toastEl.classList.remove('show'); }, 2400);
   }
-  function announce(text) { srEl.textContent = ''; setTimeout(function () { srEl.textContent = text; }, 30); }
+  function announce(text) { if (!srEl) return; srEl.textContent = ''; setTimeout(function () { srEl.textContent = text; }, 30); }
 
-  /* ---------- Config: download links + version labels ---------- */
+  /* ---------- Config: download links, file names, version labels ---------- */
   var apk = {
-    meshtrike: { url: CFG.MESHTRIKE_APK_URL || '#download', name: CFG.MESHTRIKE_APK_NAME || 'Meshtrike APK' },
-    reach: { url: CFG.REACH_APK_URL || '#download-reach', name: CFG.REACH_APK_NAME || 'MeshGRID APK' }
+    meshtrike: { url: CFG.MESHTRIKE_APK_URL, name: CFG.MESHTRIKE_APK_NAME || 'meshtrike.apk' },
+    reach: { url: CFG.REACH_APK_URL, name: CFG.REACH_APK_NAME || 'meshgrid.apk' }
   };
+  // The HTML already carries the real URLs (for visitors without JavaScript); config.js wins when set.
   $$('[data-apk]').forEach(function (a) {
     var item = apk[a.getAttribute('data-apk')];
     if (!item) return;
-    a.setAttribute('href', item.url);
-    a.addEventListener('click', function (e) {
-      if (item.url.charAt(0) === '#') {
-        e.preventDefault();
-        toast('Download link coming soon');
-      } else {
-        toast('Downloading ' + item.name);
-      }
-    });
+    if (item.url) a.setAttribute('href', item.url);
+    a.addEventListener('click', function () { toast('Downloading ' + item.name); });
+  });
+  $$('[data-apk-name]').forEach(function (el) {
+    var item = apk[el.getAttribute('data-apk-name')];
+    if (item) el.textContent = item.name;
   });
   $$('[data-ver]').forEach(function (el) {
     var v = el.getAttribute('data-ver') === 'reach' ? CFG.REACH_VERSION : CFG.MESHTRIKE_VERSION;
     if (v) el.textContent = v;
   });
+  if (CFG.RELEASES_URL) $$('[data-releases]').forEach(function (a) { a.setAttribute('href', CFG.RELEASES_URL); });
+
+  /* ---------- Header: "More" dropdown + mobile menu (both <details>, so they work without JS) ---------- */
+  (function navMenus() {
+    var dds = $$('[data-dd]').map(function (el) { return el.tagName === 'DETAILS' ? el : $('details', el); }).filter(Boolean);
+    function close(d, focus) {
+      if (!d.open) return;
+      d.open = false;
+      if (focus) $('summary', d).focus();
+    }
+    dds.forEach(function (d) {
+      d.addEventListener('toggle', function () {
+        if (d.open) dds.forEach(function (o) { if (o !== d) close(o); });
+      });
+      // leaving the dropdown with Tab closes it
+      d.addEventListener('focusout', function (e) {
+        if (d.open && e.relatedTarget && !d.contains(e.relatedTarget)) close(d);
+      });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      dds.forEach(function (d) { if (d.open) close(d, d.contains(document.activeElement) || document.activeElement === document.body); });
+    });
+    document.addEventListener('click', function (e) {
+      dds.forEach(function (d) { if (d.open && !d.contains(e.target)) close(d); });
+    });
+    // close the mobile menu when switching to the desktop layout
+    var wide = window.matchMedia('(min-width: 1001px)');
+    var onWide = function () { if (wide.matches) dds.forEach(function (d) { close(d); }); };
+    if (wide.addEventListener) wide.addEventListener('change', onWide);
+  })();
 
   /* ---------- Hero chat: replays the conversation (final frame is static HTML) ---------- */
   (function heroChat() {
@@ -87,21 +117,56 @@
     }, 1500);
   })();
 
-  /* ---------- Scroll reveal ---------- */
+  /* ---------- Scroll reveal (single elements) and sequences ([data-seq]: children one after another) ---------- */
   if (motionOK() && 'IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add('rv-in'); io.unobserve(e.target); }
+        if (!e.isIntersecting) return;
+        e.target.classList.add(e.target.classList.contains('sq') ? 'sq-in' : 'rv-in');
+        io.unobserve(e.target);
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
     setTimeout(function () {
-      $$('[data-reveal]').forEach(function (el) {
-        if (el.getBoundingClientRect().top < window.innerHeight) return;
-        el.classList.add('rv');
+      $$('[data-reveal], [data-seq]').forEach(function (el) {
+        if (el.getBoundingClientRect().top < window.innerHeight) return; // already on screen: leave it visible
+        el.classList.add(el.hasAttribute('data-seq') ? 'sq' : 'rv');
         io.observe(el);
       });
     }, 60);
   }
+
+  /* ---------- Roadmap timeline ----------
+     Browsers with scroll-driven animations draw the line and reveal the stages in CSS alone.
+     Elsewhere: an IntersectionObserver turns stages on as they arrive, and a scroll listener (attached only
+     while the timeline is on screen) draws the line. Without JS or with reduced motion everything is shown. */
+  (function timeline() {
+    var tl = $('[data-tl]');
+    if (!tl || !motionOK() || !('IntersectionObserver' in window)) return;
+    if (window.CSS && CSS.supports && CSS.supports('animation-timeline: view()')) return;
+    var items = $$('.tl__item', tl), ticking = false, live = false;
+    tl.classList.add('tl--js');
+    function draw() {
+      ticking = false;
+      var r = tl.getBoundingClientRect(), mid = window.innerHeight / 2;
+      var p = Math.max(0, Math.min(1, (mid - r.top) / r.height));
+      tl.style.setProperty('--tl-p', p.toFixed(4));
+      items.forEach(function (it) {
+        var n = $('.tl__node', it).getBoundingClientRect();
+        it.classList.toggle('lit', n.top + n.height / 2 <= mid + 1);
+      });
+    }
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(draw); } }
+    new IntersectionObserver(function (entries) {
+      var on = entries[0].isIntersecting;
+      if (on && !live) { addEventListener('scroll', onScroll, { passive: true }); addEventListener('resize', onScroll); live = true; draw(); }
+      else if (!on && live) { removeEventListener('scroll', onScroll); removeEventListener('resize', onScroll); live = false; draw(); }
+    }).observe(tl);
+    var tio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('on'); tio.unobserve(e.target); } });
+    }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+    items.forEach(function (it) { tio.observe(it); });
+    draw();
+  })();
 
   /* ---------- Cursor blob, tilt cards, magnetic buttons (mouse only) ---------- */
   if (motionOK() && fineMQ.matches) {
@@ -181,6 +246,13 @@
         if (willOpen) { qa.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); }
       });
     });
+    // a link to one question (faq.html#q-meshgrid) opens that one
+    function openHash() {
+      var t = location.hash && document.getElementById(location.hash.slice(1));
+      if (t && t.classList.contains('qa') && !t.classList.contains('open')) $('.qa__btn', t).click();
+    }
+    openHash();
+    addEventListener('hashchange', openHash);
   })();
 
   /* ---------- Swag: preview filters (merch is not on sale yet, so there is no bag or checkout) ---------- */
@@ -198,7 +270,7 @@
     });
   });
 
-  /* ---------- Header bag button: small "merch is coming soon" dialog ---------- */
+  /* ---------- Header bag button (a link to swag.html): with JS it opens a small "merch is coming soon" dialog ---------- */
   var soonBtn = $('[data-open-soon]'), soon = $('#shop-soon'), lastFocus = null;
   if (soonBtn && soon) {
     var panel = $('.drawer__panel', soon);
@@ -215,9 +287,9 @@
       soon.classList.remove('open');
       if (restore !== false && lastFocus) lastFocus.focus();
     };
-    soonBtn.addEventListener('click', openSoon);
+    soonBtn.addEventListener('click', function (e) { e.preventDefault(); openSoon(); });
     $$('[data-close-soon]', soon).forEach(function (b) { b.addEventListener('click', closeSoon); });
-    // the link scrolls to the swag section; don't pull focus back up to the header
+    // the link goes to the swag previews; don't pull focus back up to the header
     $('[data-soon-go]', soon).addEventListener('click', function () { closeSoon(false); });
     document.addEventListener('keydown', function (e) {
       if (!soon.classList.contains('open')) return;

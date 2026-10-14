@@ -124,9 +124,9 @@
   </ul>
   <div class="box box--good keep">
     <div class="box__t">Official fingerprints</div>
-    <p>APK signing certificate (SHA-256): <span class="mono" data-fp="android">published with the first signed release</span><br>OpenPGP release key: <span class="mono" data-fp="openpgp">published with the first signed release</span><br>minisign public key: <span class="mono" data-fp="minisign">published with the first signed release</span></p>
+    <p>APK signing certificate (SHA-256): <span class="mono" data-fp="android">AB:09:7B:F4:3C:9B:63:0F:06:67:02:E0:61:9A:60:43:05:13:6A:D2:D6:4B:AA:38:E7:62:2F:AF:17:09:AD:3E</span><br>OpenPGP release key: <span class="mono" data-fp="openpgp">79E2 783E D581 74B7 3393 FE0F 79A5 F1F0 4F2D EA99</span><br>minisign public key: <span class="mono" data-fp="minisign">RWSC18AkPYb7l9TWSVy8CzBHwL/ZqkM7aXeAqeLlLHhsKDeoAaiZ463t</span></p>
   </div>
-  <p class="gap">To check a copy, open meshtrike0.github.io/verify.html and pick the APK; it answers REAL or NOT REAL. On a computer, <span class="mono">sh verify.sh meshtrike-*.apk</span> does the same in one command. If anything does not match, do not install the app, and do not pass it on.</p>
+  <p class="gap">To check a copy, open meshtrike0.github.io/verify.html and pick the APK; it answers REAL or NOT REAL. On a computer, <span class="mono">sh verify.sh meshtrike.apk</span> does the same in one command. If anything does not match, do not install the app, and do not pass it on.</p>
 
   <section class="use keep" aria-labelledby="use">
     <div class="eyebrow eyebrow--olive" id="use">7. RESPONSIBLE USE</div>
@@ -140,13 +140,17 @@
   <table>
     <thead><tr><th>Stage</th><th>Includes</th></tr></thead>
     <tbody>
-      <tr><td class="strong">Shipped · build v11</td><td>Mesh messaging, routes and route pill, delivery states, groups, public channels, photos and files, photo viewer, QR handoff, internet route via MeshGRID, High-Risk mode</td></tr>
+      <tr><td class="strong">Shipped · v1.0.0</td><td>Mesh messaging, routes and route pill, delivery states, groups, public channels, photos and files, photo viewer, QR handoff, internet route via MeshGRID, High-Risk mode</td></tr>
       <tr><td class="strong">Built, in field testing</td><td>Swipe to reply, voice notes, nearby voice calls over Bluetooth and Wi-Fi Direct</td></tr>
-      <tr><td class="strong">Next</td><td>Offline maps with satellite positioning (below), video previews</td></tr>
-      <tr><td class="strong">Later</td><td>Group calls, disguise bridges</td></tr>
+      <tr><td class="strong">Next</td><td>First signed public release, verification in the browser, reproducible builds, F-Droid</td></tr>
+      <tr><td class="strong">Then</td><td>Community servers run by volunteers (below); offline maps with satellite positioning (below); independent security audit</td></tr>
+      <tr><td class="strong">Later</td><td>iPhone app, group calls, disguise bridges</td></tr>
     </tbody>
   </table>
   </div>
+
+  <h3>Roadmap: community servers run by volunteers</h3>
+  <p class="gap">Meshtrike needs no servers, and it always will. But when any phone in a mesh reaches the internet, servers run by volunteers, the way Tor relies on relays run by its community, can carry sealed messages much further: as <b>mailboxes</b> that hold messages for phones that are offline, as <b>bridges</b> between separate meshes in different towns or countries, and later as <b>disguise bridges</b> where the private internet route is blocked. They only ever handle sealed envelopes, so they learn no contents, no contacts and nothing about who talks to whom, and no phone depends on any one server. Running one will take a single small program, with a public list of servers signed by the team.</p>
 
   <h3>Roadmap: maps that keep working through a shutdown</h3>
   <p>When the internet is cut, online maps stop working with it: Google Maps and similar apps need servers to draw the map, search places and plan routes. People are left without a way to find each other, a meeting point, a hospital or a safe way out. Meshtrike plans a map that needs none of that.</p>
@@ -166,7 +170,7 @@
   <p>A shutdown can switch off a network. It cannot switch off people standing next to each other. Meshtrike turns that simple fact into a way to keep talking, keep each other safe and keep the record of what happened, wherever voices are being silenced.</p>
   <p class="sign">From India, for everyone.</p>
 
-  <footer class="foot"><span>Meshtrike Whitepaper</span><span>Build v11 · October 2026</span></footer>
+  <footer class="foot"><span>Meshtrike Whitepaper</span><span>v1.0.0 · October 2026</span></footer>
 </main>
 </body>
 </html>
